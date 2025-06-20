@@ -1,6 +1,7 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { createClient } from "redis";
+import { z } from "zod";
 
 console.log("🚀 App démarrée");
 
@@ -19,6 +20,31 @@ console.log("Connecté à Redis");
 
 app.use(express.json());
 
+// Schéma Zod pour valider la création d'un bateau
+const boatSchema = z.object({
+  name: z.string().min(3, "Le nom doit contenir au moins 3 caractères."),
+  type: z.string().nonempty("Le type est obligatoire."),
+  year: z
+    .string()
+    .regex(/^\d{4}$/, "L'année doit être un nombre à 4 chiffres.")
+    .transform((val) => parseInt(val))
+    .refine(
+      (yearInt) => yearInt >= 1900 && yearInt <= new Date().getFullYear(),
+      {
+        message: `L'année doit être comprise entre 1900 et ${new Date().getFullYear()}.`,
+      }
+    ),
+  description: z.string().optional(),
+  price: z
+    .string()
+    .optional()
+    .refine(
+      (val) => val === undefined || (!isNaN(parseFloat(val)) && parseFloat(val) >= 0),
+      { message: "Le prix doit être un nombre positif." }
+    )
+    .transform((val) => (val !== undefined ? parseFloat(val) : undefined)),
+});
+
 // connexion à MongoDB via Prisma
 app.get("/", async (req, res) => {
   try {
@@ -30,55 +56,29 @@ app.get("/", async (req, res) => {
   }
 });
 
-// Création d'un bateau
-// Exemple de requête : POST /boats/create
+// Création d'un bateau avec validation Zod
 app.post("/boats/create", async (req, res) => {
-  const { name, type, year, description, price } = req.body;
-
-  // Validation simple côté serveur
-  if (!name || typeof name !== "string" || name.trim().length < 3) {
-    return res
-      .status(400)
-      .json({ error: "Le nom doit contenir au moins 3 caractères." });
-  }
-
-  if (!type || typeof type !== "string") {
-    return res.status(400).json({ error: "Le type est obligatoire." });
-  }
-
-  const yearInt = parseInt(year);
-  if (isNaN(yearInt) || yearInt < 1900 || yearInt > new Date().getFullYear()) {
-    return res
-      .status(400)
-      .json({
-        error: "L'année doit être un nombre valide entre 1900 et aujourd'hui.",
-      });
-  }
-
-  if (price !== undefined) {
-    const priceFloat = parseFloat(price);
-    if (isNaN(priceFloat) || priceFloat < 0) {
-      return res
-        .status(400)
-        .json({ error: "Le prix doit être un nombre positif." });
-    }
-  }
-
   try {
+    const data = boatSchema.parse(req.body);
+
     const boat = await prisma.boat.create({
       data: {
-        name: name.trim(),
-        type,
-        year: yearInt,
-        description,
-        price: price !== undefined ? parseFloat(price) : undefined,
+        name: data.name.trim(),
+        type: data.type,
+        year: data.year,
+        description: data.description,
+        price: data.price,
       },
     });
+
     res.status(201).json(boat);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ errors: error.errors });
+    }
+
     console.error("Erreur :", error);
     if (error.code === "P2002") {
-      // Erreur de contrainte unique (ex: nom déjà utilisé)
       return res
         .status(400)
         .json({ error: "Un bateau avec ce nom existe déjà." });
@@ -88,7 +88,6 @@ app.post("/boats/create", async (req, res) => {
 });
 
 // Récupération de tous les bateaux
-// Exemple de requête : GET /boats
 app.get("/boats", async (req, res) => {
   try {
     const boats = await prisma.boat.findMany();
@@ -100,7 +99,6 @@ app.get("/boats", async (req, res) => {
 });
 
 // Recherche de bateaux avec des filtres
-// Exemple de requête : GET /boats/search?name=Yacht&minPrice=100000&maxPrice=500000
 app.get("/boats/search", async (req, res) => {
   const { name, minPrice, maxPrice } = req.query;
 
@@ -121,7 +119,6 @@ app.get("/boats/search", async (req, res) => {
 });
 
 // Récupération d'un bateau par ID
-// Exemple de requête : GET /boats/id
 app.get("/boats/:id", async (req, res) => {
   try {
     const boat = await prisma.boat.findUnique({
@@ -138,7 +135,6 @@ app.get("/boats/:id", async (req, res) => {
 });
 
 // Mise à jour d'un bateau
-// Exemple de requête : PUT /boats/id
 app.put("/boats/:id", async (req, res) => {
   try {
     const updated = await prisma.boat.update({
@@ -154,7 +150,6 @@ app.put("/boats/:id", async (req, res) => {
 });
 
 // Suppression d'un bateau
-// Exemple de requête : DELETE /boats/id
 app.delete("/boats/:id", async (req, res) => {
   try {
     await prisma.boat.delete({
@@ -172,9 +167,7 @@ app.delete("/boats/:id", async (req, res) => {
   }
 });
 
-
 // Route de test pour Redis
-// Exemple de requête : GET /redis/test
 app.get("/redis/test", async (req, res) => {
   try {
     await redisClient.set("cle", "Bonjour, on es sur Redis !");
