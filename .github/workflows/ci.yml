@@ -44,6 +44,9 @@ jobs:
             sleep 5
           done
 
+      - name: Set DATABASE_URL env variable
+        run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+
       - name: Generate Prisma client
         run: npx prisma generate
 
@@ -52,3 +55,4 @@ jobs:
 
       - name: Run the app
         run: node index.js &
+
