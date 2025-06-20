@@ -17,14 +17,9 @@ jobs:
           - 6379:6379
 
       mongo:
-        image: mongo:7
+        image: mongo:6.0
         ports:
           - 27017:27017
-        options: >-
-          --health-cmd="mongo --eval 'db.adminCommand(\"ping\")'"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - name: Checkout repository
@@ -42,7 +37,7 @@ jobs:
         run: |
           for i in {1..10}; do
             if mongo --eval "db.adminCommand('ping')"; then
-              echo "✅ MongoDB is ready"
+              echo "MongoDB is ready"
               break
             fi
             echo "⏳ Waiting for MongoDB to be ready..."
@@ -55,8 +50,5 @@ jobs:
       - name: Push Prisma schema to DB
         run: npx prisma db push
 
-      - name: Run tests (optional)
-        run: npm test
-
-      - name: Run the app (basic check)
+      - name: Run the app
         run: node index.js &
