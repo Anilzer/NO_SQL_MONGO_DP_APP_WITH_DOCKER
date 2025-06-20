@@ -11,8 +11,11 @@ datasource db {
 }
 
 model Boat {
-  id   String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
-  type String
-  year Int
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  type        String
+  year        Int      @default(2025)
+  description String?
+  price       Float?
+  createdAt   DateTime @default(now())
 }

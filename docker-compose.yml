@@ -15,9 +15,20 @@ services:
   init-replica:
     image: mongo:7
     depends_on:
-      - mongo
-    entrypoint: ["sh", "-c", "sleep 5 && mongosh --host mongo:27017 --eval 'rs.initiate({_id:\"rs0\", members:[{_id:0, host:\"mongo:27017\"}]})'"]
-    restart: on-failure
+       - mongo
+    volumes:
+      - ./init-mongo.sh:/init-mongo.sh:ro
+    entrypoint: ["sh", "-c", "sleep 5 && sh /init-mongo.sh"]
+    restart: "on-failure"
+    networks:
+      - sailingLocNet
+
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
     networks:
       - sailingLocNet
 
@@ -27,13 +38,15 @@ services:
     depends_on:
       - mongo
       - init-replica
+      - redis
     ports:
       - "3000:3000"
     environment:
       - DATABASE_URL=mongodb://mongo:27017/sailingLoc?replicaSet=rs0
+      - REDIS_URL=redis://redis:6379
     command: sh -c "node wait-for-mongo.js && npx prisma db push && node index.js"
-    volumes:
-      - .:/app
+    # volumes:
+    #   - .:/app
     networks:
       - sailingLocNet
 

@@ -1,0 +1,209 @@
+{
+	"info": {
+		"_postman_id": "f3411023-59c2-4ab4-9c9b-490f10c3315e",
+		"name": "sailingLoc.postman_collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34962122"
+	},
+	"item": [
+		{
+			"name": "Test connexion MongoDB",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000"
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Créer un bateau",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"The Warrios\",\r\n  \"type\": \"voile\",\r\n  \"year\": 2023,\r\n  \"description\": \"Un bateau de guerrier\",\r\n  \"price\": 10000\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/boats/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"boats",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Récupérer tous les bateaux",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/boats",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"boats"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Rechercher un bateau (name + price)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/boats/search?name=Dynasty&minPrice=1000&maxPrice=50000",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"boats",
+						"search"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "Dynasty"
+						},
+						{
+							"key": "minPrice",
+							"value": "1000"
+						},
+						{
+							"key": "maxPrice",
+							"value": "50000"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Récupérer bateau par ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/boats/68551f8acd70f225c3295849",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"boats",
+						"68551f8acd70f225c3295849"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Mettre à jour un bateau",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"Dynasty 93i\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/boats/68551f8acd70f225c3295849",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"boats",
+						"68551f8acd70f225c3295849"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Supprimer un bateau",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/boats/68551844b2762fac82607268",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"boats",
+						"68551844b2762fac82607268"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Test Redis",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/redis/test",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"redis",
+						"test"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
