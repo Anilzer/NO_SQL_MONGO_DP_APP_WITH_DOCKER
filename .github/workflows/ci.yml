@@ -2,47 +2,61 @@ name: Pipeline CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
-    services:
-      mongo:
-        image: mongo:7
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'" 
-          --health-interval 10s 
-          --health-timeout 5s 
-          --health-retries 5
 
+    services:
       redis:
         image: redis:7
         ports:
           - 6379:6379
 
-    env:
-      DATABASE_URL: "mongodb://localhost:27017/sailingLoc"
-      REDIS_URL: "redis://localhost:6379"
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongo --eval 'db.adminCommand(\"ping\")'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 20
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+
+      - name: Wait for MongoDB to be ready
+        run: |
+          for i in {1..10}; do
+            if mongo --eval "db.adminCommand('ping')"; then
+              echo "✅ MongoDB is ready"
+              break
+            fi
+            echo "⏳ Waiting for MongoDB to be ready..."
+            sleep 5
+          done
 
       - name: Generate Prisma client
         run: npx prisma generate
 
       - name: Push Prisma schema to DB
         run: npx prisma db push
+
+      - name: Run tests (optional)
+        run: npm test
+
+      - name: Run the app (basic check)
+        run: node index.js &
